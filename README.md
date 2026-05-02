@@ -1,20 +1,25 @@
-# WindowApp — API de venta de ventanas
+# WindowApp — Window sales API
 
-API REST en **FastAPI** para la gestión del catálogo de ventanas de un negocio
-de carpintería de PVC, aluminio, madera y mixta. Soporta tipos corredera,
-abatible, oscilobatiente, fija y pivotante, con vidrios simple, doble, triple,
-templado o laminado.
+REST API built with **FastAPI** to manage the catalog of a window-carpentry
+business: PVC, aluminium, wood and mixed-material windows. Supports sliding,
+casement, tilt-and-turn, fixed and pivot types, with single, double, triple,
+tempered or laminated glazing.
+
+> Note: domain field names are kept in Spanish (`ventanas`, `codigo`,
+> `tipo_ventana`, `material`, `precio_base`, ...) because they belong to the
+> business model. The application chrome (docs, comments, validation messages
+> in this README) is in English.
 
 ## Stack
 
 - **FastAPI** + **Uvicorn**
 - **SQLAlchemy 2.0** (async) + **asyncpg**
 - **PostgreSQL 16**
-- **Alembic** (migraciones async)
+- **Alembic** (async migrations)
 - **Pydantic v2** + **pydantic-settings**
 - **Docker** + **docker-compose**
 
-## Estructura
+## Project layout
 
 ```
 .
@@ -25,9 +30,9 @@ templado o laminado.
 │   ├── core/config.py
 │   ├── models/        # Ventana + enums
 │   ├── schemas/       # Pydantic v2
-│   ├── crud/          # operaciones async
+│   ├── crud/          # async operations
 │   └── routers/       # /api/v1/ventanas
-├── alembic/           # entorno async + migración inicial
+├── alembic/           # async environment + initial migration
 ├── alembic.ini
 ├── requirements.txt
 ├── Dockerfile
@@ -38,78 +43,78 @@ templado o laminado.
 
 ## Endpoints
 
-Todos bajo el prefijo `/api/v1`.
+All endpoints are mounted under the `/api/v1` prefix.
 
-| Método | Ruta | Descripción |
+| Method | Path | Description |
 |---|---|---|
-| GET | `/ventanas` | Lista con filtros opcionales (`tipo_ventana`, `material`, `precio_min`, `precio_max`, `disponible`, `skip`, `limit`) |
-| GET | `/ventanas/{id}` | Detalle |
-| POST | `/ventanas` | Crear (código único) |
-| PUT | `/ventanas/{id}` | Actualización parcial |
-| DELETE | `/ventanas/{id}` | Eliminar |
+| GET | `/ventanas` | List with optional filters (`tipo_ventana`, `material`, `precio_min`, `precio_max`, `disponible`, `skip`, `limit`) |
+| GET | `/ventanas/{id}` | Retrieve one |
+| POST | `/ventanas` | Create (code must be unique) |
+| PUT | `/ventanas/{id}` | Partial update |
+| DELETE | `/ventanas/{id}` | Delete |
 | GET | `/` | Healthcheck |
 
-Documentación interactiva:
+Interactive docs:
 
 - Swagger UI: <http://localhost:8000/docs>
 - ReDoc: <http://localhost:8000/redoc>
 
-## Puesta en marcha — opción A (Docker, recomendado)
+## Getting started — option A (Docker, recommended)
 
 ```bash
 cp .env.example .env
 docker compose up --build
 ```
 
-`docker compose` aplica las migraciones automáticamente con
-`alembic upgrade head` y arranca uvicorn con `--reload`.
+`docker compose` automatically applies migrations with `alembic upgrade head`
+and starts uvicorn with `--reload`.
 
-API en <http://localhost:8000> — Postgres en `localhost:5432`.
+API at <http://localhost:8000> — Postgres at `localhost:5432`.
 
-Para parar:
+To stop:
 
 ```bash
-docker compose down          # conserva el volumen
-docker compose down -v       # borra también la base de datos
+docker compose down          # keeps the volume
+docker compose down -v       # also drops the database volume
 ```
 
-## Puesta en marcha — opción B (local sin Docker)
+## Getting started — option B (local, without Docker)
 
-Requiere Python 3.12+ y un Postgres accesible.
+Requires Python 3.12+ and a reachable PostgreSQL instance.
 
 ```bash
 python -m venv .venv
 .venv\Scripts\activate                 # Windows PowerShell
 # source .venv/bin/activate            # Linux / macOS
 pip install -r requirements.txt
-cp .env.example .env                   # ajusta DATABASE_URL si es necesario
+cp .env.example .env                   # adjust DATABASE_URL if needed
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-## Migraciones — Alembic
+## Migrations — Alembic
 
 ```bash
-# Aplicar todas las migraciones
+# Apply all migrations
 alembic upgrade head
 
-# Revertir la última
+# Revert the last one
 alembic downgrade -1
 
-# Crear una nueva migración a partir de cambios en los modelos
-alembic revision --autogenerate -m "descripcion del cambio"
+# Generate a new migration from model changes
+alembic revision --autogenerate -m "describe the change"
 ```
 
-> Dentro de Docker: `docker compose exec app alembic <comando>`.
+> Inside Docker: `docker compose exec app alembic <command>`.
 
-## Ejemplo de uso
+## Usage example
 
 ```bash
 curl -X POST http://localhost:8000/api/v1/ventanas \
   -H "Content-Type: application/json" \
   -d '{
     "codigo": "VEN-PVC-001",
-    "nombre": "Ventana corredera PVC blanca 120x100",
+    "nombre": "Sliding PVC window, white, 120x100",
     "tipo_ventana": "corredera",
     "material": "pvc",
     "tipo_vidrio": "doble",
